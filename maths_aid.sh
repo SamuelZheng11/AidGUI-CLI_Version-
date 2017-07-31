@@ -17,24 +17,20 @@ printSetup()
 getUserCommand(){
 	read userSelection;
 	case $userSelection in
-	   l) printf "the Exisiting creations are : \n ";
-			getCreationsList
+	   l) getCreationsList;
 			;;
 	
-	   p) printf "Which creation do you wish to play? : \n "
-			getPlayCreationOptions
+	   p) getPlayCreationOptions;
 			;;
 	
-	   d) printf "Which creation do you want to delete? : \n "
-			getDeleteCreationOptions
+	   d) getDeleteCreationOptions;
 			;;
 	
-	   c) printf "What creation do you wish to make? : \n "
-			createCreation
+	   c) createCreation;
 			;;
 	
 	   q) printf "Closing visual/audio aid program\n ";
-			exit
+			exit;
 			;;
 	
 	   *) printf "not a valid command please enter one of the selections provided above : \n";
@@ -43,6 +39,25 @@ getUserCommand(){
 	esac
 }
 
+getCreationsList(){
+	printf "the Exisiting creations are : \n ";
+	
+}
+
+GetPlayCreationOptions(){
+	printf "Which creation do you wish to play? : \n ";
+
+}
+
+getDeleteCreationOptions(){
+	printf "Which creation do you want to delete? : \n ";
+
+}
+
+createCreation(){
+	printf "What creation do you wish to make? : \n ";
+
+}
 
 printSetup;
 getUserCommand;
