@@ -55,19 +55,13 @@ getDeleteCreationOptions(){
 }
 
 createCreation(){
-	printf "What creation do you wish to make? : \n ";
-	read creationName;
-	if [`ls ~/Desktop/206/AidGUI-CLI_Version-/Audio | grep "$creationName.*" &> dev\null` == null]
-	then
-		printf "found nothing with $creationName\n";
-	else
-		printf "A file with that name already exists, please choose a new one\n";
-		createCreation;
-	fi
+    printf "Please enter a name for the new creation: \n";
+    read creationName;
+    echo uniq |  grep $creationName
 
 }
 
-printSetup;
+printSetup;		  
 getUserCommand;
 
 
