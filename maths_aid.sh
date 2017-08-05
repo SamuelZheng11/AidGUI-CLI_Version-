@@ -7,23 +7,32 @@ printSetup()
 	echo "==========================================================================="
 	echo "Welcome to the Maths Authoring Aid"
 	echo "==========================================================================="
-	mkdir "creations";
+	
+	if [ -d "$localHome"/creations ]
+	then
+		printf "" &> /dev/null;
+		#do nothing, it wont let me just have blank for then
+	else
+		mkdir "creations";	
+	fi
 }
 
 printMenu(){
 	cd "$localHome";
 	echo "";
 	echo "Please select from one of the following options :"
+	echo ""
 	echo -e "\t(l)ist existing creations"
 	echo -e "\t(p)lay and existing creation"
 	echo -e "\t(d)elete and existing creation"
 	echo -e "\t(c)reate a new creation"
 	echo -e "\t(q)uit authoring tool"
+	echo ""
 	getUserCommand
 }
 
 getUserCommand(){
-	read -p "Enter a selection [l/q/d/c/q]: " -n1 userSelection;
+	read -p "Enter a selection [l/p/d/c/q]: " -n1 userSelection;
 	echo "";
 	echo "";
 	case $userSelection in
@@ -54,14 +63,45 @@ getUserCommand(){
 	esac
 }
 
-getCreationsList(){
-	echo "the Exisiting creations are : ";
-	
+displayCreationList(){
+	local localCount=1;
+
+	for creationDIR in "$localHome"/creations/* 
+	do
+		echo -e "\t$localCount) `basename "$creationDIR"`";
+		localCount=$((localCount+1));
+	done
 }
 
-GetPlayCreationOptions(){
-	echo "Which creation do you wish to play? : ";
+getCreationsList(){
+	echo "the Exisiting creations are : ";
+	displayCreationList;
+	echo ""
+	read -p"Please press any key to return to the menu" -n1;
+	printMenu;
+}
 
+getPlayCreationOptions(){
+	echo "Which creation do you wish to play? : ";
+	displayCreationList;
+	echo ""
+	if [ -d "$localHome"/creations/* ]
+	then
+		read -p"Please select the number that corresponds with the creation you would like to play" -n1 playCreationNumber;
+	else
+		read -p"Sorry no current creations exist, would you like to create one? [y/n]" -n1 createCreationChoice
+		
+		case createCreationChoice in
+			
+			[yY]) createCreation;
+				;;
+
+			[nN]) echo "ok returning to main menu"
+				read -p"Press any key to contiune" -n1;
+				printMenu;
+				;;
+		esac
+	fi
 }
 
 getDeleteCreationOptions(){
@@ -74,14 +114,14 @@ createCreation(){
 	echo "";
 	read -p "Please type the name that you want the creation to be called : " creationName;
 	
-	if [ -d ./creations/"$creationName" ]
+	if [ -d "$localHome"/creations/"$creationName" ]
 	then
 		echo "";
 		echo "A file with that name already exists, Please choose another name";
 		echo "";
 		createCreation; 
 	else
-		mkdir ./creations/"$creationName"	
+		mkdir "$localHome"/creations/"$creationName"	
 	fi
 	
 	makeVideo "$creationName";
