@@ -8,12 +8,9 @@ printSetup()
 	echo "Welcome to the Maths Authoring Aid"
 	echo "==========================================================================="
 	
-	if [ -d "$localHome"/creations ]
+	if [ ! -d "$localHome"/creations ]
 	then
-		printf "" &> /dev/null;
-		#do nothing, it wont let me just have blank for then
-	else
-		mkdir "creations";	
+		mkdir ""$localHome"/creations";	
 	fi
 }
 
@@ -48,11 +45,7 @@ getUserCommand(){
 	   [cC]) createCreation;
 			;;
 	
-	   [qQ]) echo "Closing visual/audio aid program ";
-			echo "";
-			read -sp "Press any key to continue" -n1
-			echo "";
-			exit;
+	   [qQ]) comfirmQuit;
 			;;
 	
 	   *) echo "sorry I do not understand the command \""$userSelection"\". Please select from the option provided only ";
@@ -64,49 +57,128 @@ getUserCommand(){
 }
 
 displayCreationList(){
-	local localCount=1;
+	local index=1;
 
-	for creationDIR in "$localHome"/creations/* 
+	for creationDIR in `ls "$localHome"/creations | sort` 
 	do
-		echo -e "\t$localCount) `basename "$creationDIR"`";
-		localCount=$((localCount+1));
+		echo -e "\t$index) `basename "$creationDIR"`";
+		((index++));
+	done
+}
+
+getCreationAtIndex(){
+	local index=1;
+	for creationDIR in `ls "$localHome"/creations | sort`
+	do
+   		if [ $1 -eq $index ]
+		then
+			comfirmUserSelection="`basename "$creationDIR"`";
+		fi
+		((index++));
 	done
 }
 
 getCreationsList(){
-	echo "the Exisiting creations are : ";
-	displayCreationList;
-	echo ""
-	read -p"Please press any key to return to the menu" -n1;
+	if [ ! `ls "$localHome"/creations | wc -l` -eq 0 ]
+	then
+		echo "the Exisiting creations are : ";
+		displayCreationList;
+	else
+		echo "sorry no creations currently exist"
+	fi
+
+	read -sp"Please press any key to return to the menu" -n1;
 	printMenu;
 }
 
 getPlayCreationOptions(){
-	echo "Which creation do you wish to play? : ";
-	displayCreationList;
-	echo ""
-	if [ -d "$localHome"/creations/* ]
+	if [ ! `ls "$localHome"/creations | wc -l` -eq 0 ]
 	then
-		read -p"Please select the number that corresponds with the creation you would like to play" -n1 playCreationNumber;
+		echo "Which creation do you wish to play? : ";
+		displayCreationList;
+		echo ""
+		cd "$localHome"/creations;
+		echo "Please select the number that corresponds with the creation you would like to play"
+		read playCreationNumber;
 	else
-		read -p"Sorry no current creations exist, would you like to create one? [y/n]" -n1 createCreationChoice
+		read -p"Sorry no current creations exist, would you like to create one? [y/n] " -n1 createCreationChoice
 		
 		case createCreationChoice in
-			
 			[yY]) createCreation;
 				;;
 
-			[nN]) echo "ok returning to main menu"
-				read -p"Press any key to contiune" -n1;
+			[nN]) echo ""
+				echo "ok returning to main menu"
+				read -sp"Press any key to contiune" -n1;
 				printMenu;
 				;;
+			*) echo "sorry I do not understand the command ";
+				getPlayCreationOptions;
 		esac
 	fi
+	
+	getCreationAtIndex $playCreationNumber;
+	echo ""
+	read -p"you have choosen \""$comfirmUserSelection"\", would you like to play this? [y/n] " -n1 playCreationChoice
+
+		case $playCreationChoice in
+			[yY]) ffplay -t 3 -autoexit "$localHome"/creations/"$comfirmUserSelection"/"$comfirmUserSelection".* &> /dev/null;
+				echo ""
+				read -sp"Returning to menu press any key to contiune" -n1
+				printMenu;
+				;;
+
+			[nN]) echo "ok returning to main menu"
+				read -sp"Press any key to contiune" -n1;
+				printMenu;
+				;;
+			*) echo "sorry I do not understand the command ";
+				getPlayCreationOptions;
+		esac
 }
 
 getDeleteCreationOptions(){
-	echo "Which creation do you want to delete? : ";
+	if [ ! `ls "$localHome"/creations | wc -l` -eq 0 ]
+	then
+		echo "Which creation do you wish to delete? : ";
+		displayCreationList;
+		echo ""
+		cd "$localHome"/creations;
+		read -sp"Please select the number that corresponds with the creation you would like to delete " -n1 deleteCreationNumber;
+	else
+		echo ""
+		echo "You do not have any creations, therefore we cannot delete any"
+		echo ""
+		read -sp"returning to main menu, press any key to continue" -n1
+		printMenu;
+	fi
 
+	getCreationAtIndex $deleteCreationNumber;
+	echo ""
+	echo "you have choosen \""$comfirmUserSelection"\"";
+	echo "WARNING REMOVING THIS CREATION WILL PERMENATLY DELETE THE CREATION FOREVER"
+	echo ""
+	read -p"are you sure you want to delete \""$comfirmUserSelection"\" (enter excatly as shown) [\"yes\"/\"no\"] " deleteCreationChoice
+
+		case $deleteCreationChoice in
+			yes) cd "$localHome"/creations/"$comfirmUserSelection"
+				rm -f *;
+				cd ..;
+				rmdir $comfirmUserSelection
+				;;
+
+			no) echo "Returning to main menu"
+				read -sp"Press any key to contiune" -n1;
+				printMenu;
+				;;
+			*) echo "sorry I do not understand the command";
+				getDeleteCreationOptions;
+		esac
+	echo ""
+	echo ""$comfirmUserSelection" has been deleted"
+	echo ""
+	read -sp"Returning to main menu, press any key to contiune" -n1
+	printMenu;
 }
 
 createCreation(){
@@ -149,11 +221,10 @@ recordVoice(){
 	ffmpeg -f alsa -i hw:0 -t 3 audioOnly.wav &> /dev/null;
 	echo "Finished recording"
 	echo ""
-	read -sp"Would you like to listen to the recording? [y/n]" -n1 listenToRecording
+	read -p"Would you like to listen to the recording? [y/n]" -n1 listenToRecording
 	echo ""
 	
 	case $listenToRecording in
-	
 		[yY]) ffplay -t 3 -autoexit audioOnly.wav &> /dev/null;
 			;;
 
@@ -162,11 +233,11 @@ recordVoice(){
 	esac
 
 	echo ""
-	read -sp"Is this acceptable? [y/n]" -n1 acceptable
+	read -p"Is this acceptable? [y/n] " -n1 acceptable
 	echo ""
+	
 
 		case $acceptable in
-	
 		[yY]) finishCreation "$1";
 			;;
 
@@ -184,7 +255,32 @@ finishCreation(){
 	-c:v copy -c:a aac -strict experimental \
 	-map 0:v:0 -map 1:a:0 "$1".mp4 &> /dev/null
 
+	echo "Creation has been made"
 	printMenu;
+}
+
+comfirmQuit(){
+	read -p"Are you sure you want to quit Maths Authoring Aid? [y/n] " -n1 quitChoice
+
+		case $quitChoice in
+			[yY]) echo ""
+				echo "Closing visual/audio aid program ";
+				echo "";
+				read -sp "Press any key to continue" -n1
+				echo "";
+				exit;
+				;;
+
+			[nN]) echo ""
+				echo "ok returning to main menu"
+				read -sp"Press any key to contiune" -n1;
+				printMenu;
+				;;
+	
+			*)	echo ""
+				echo "sorry I do not understand the command ";
+				comfirmQuit;
+		esac
 }
 
 printSetup;
