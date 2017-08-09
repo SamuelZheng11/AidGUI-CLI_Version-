@@ -91,6 +91,31 @@ getCreationsList(){
 	printMenu;
 }
 
+checkIsValidNumber(){
+
+	echo "$1" | grep [0-9]-* &> /dev/null
+
+	if [ "$?" -eq 0 ]
+	then
+		
+		if [ ! `ls "$localHome"/creations | wc -l` -lt $1 &> /dev/null ]
+		then 
+			isValidNumber=true;
+			return;
+		fi
+		isValidNumber=false
+		echo ""
+		echo "Please select a number from inside the range"
+		echo ""
+		return;
+	fi
+	isValidNumber=false
+	echo ""
+	echo "Sorry that is not a number, please select a number"
+	echo ""
+
+}
+
 getPlayCreationOptions(){
 	if [ ! `ls "$localHome"/creations | wc -l` -eq 0 ]
 	then
@@ -102,21 +127,30 @@ getPlayCreationOptions(){
 		read playCreationNumber;
 	else
 		read -p"Sorry no current creations exist, would you like to create one? [y/n] " -n1 createCreationChoice
-		
-		case createCreationChoice in
+		echo ""		
+	
+		case $createCreationChoice in
 			[yY]) createCreation;
 				;;
 
 			[nN]) echo ""
-				echo "ok returning to main menu"
+				echo "Returning to main menu"
 				read -sp"Press any key to contiune" -n1;
 				printMenu;
 				;;
-			*) echo "sorry I do not understand the command ";
+			*) 
+				echo "sorry I do not understand the command ";
+				echo ""
 				getPlayCreationOptions;
 		esac
 	fi
-	
+
+	checkIsValidNumber $playCreationNumber;
+	if ! $isValidNumber
+	then
+		getPlayCreationOptions;
+	fi
+
 	getCreationAtIndex $playCreationNumber;
 	echo ""
 	read -p"you have choosen \""$comfirmUserSelection"\", would you like to play this? [y/n] " -n1 playCreationChoice
@@ -128,7 +162,8 @@ getPlayCreationOptions(){
 				printMenu;
 				;;
 
-			[nN]) echo "ok returning to main menu"
+			[nN]) echo ""
+				echo "ok returning to main menu"
 				read -sp"Press any key to contiune" -n1;
 				printMenu;
 				;;
@@ -144,13 +179,20 @@ getDeleteCreationOptions(){
 		displayCreationList;
 		echo ""
 		cd "$localHome"/creations;
-		read -sp"Please select the number that corresponds with the creation you would like to delete " -n1 deleteCreationNumber;
+		echo "Please select the number that corresponds with the creation you would like to delete " 
+		read deleteCreationNumber;
 	else
 		echo ""
 		echo "You do not have any creations, therefore we cannot delete any"
 		echo ""
 		read -sp"returning to main menu, press any key to continue" -n1
 		printMenu;
+	fi
+
+	checkIsValidNumber $deleteCreationNumber;
+	if ! $isValidNumber
+	then
+		getDeleteCreationOptions;
 	fi
 
 	getCreationAtIndex $deleteCreationNumber;
@@ -233,15 +275,15 @@ recordVoice(){
 	esac
 
 	echo ""
-	read -p"Is this acceptable? [y/n] " -n1 acceptable
+	read -p"do you want to (f)inish the creation or (r)e-record? [f/r] " -n1 acceptable
 	echo ""
 	
 
 		case $acceptable in
-		[yY]) finishCreation "$1";
+		[fF]) finishCreation "$1";
 			;;
 
-		[nN]) echo "" 
+		[rR]) echo "" 
 				echo "ok we will re-record the audio clip"
 				rm -f audioOnly.wav &> /dev/null;
 				recordVoice "$1";
