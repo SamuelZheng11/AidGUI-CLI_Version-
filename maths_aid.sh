@@ -217,7 +217,7 @@ getDeleteCreationOptions(){
 				getDeleteCreationOptions;
 		esac
 	echo ""
-	echo ""$comfirmUserSelection" has been deleted"
+	echo "\""$comfirmUserSelection"\" has been deleted"
 	echo ""
 	read -sp"Returning to main menu, press any key to contiune" -n1
 	printMenu;
@@ -260,7 +260,7 @@ recordVoice(){
 	read -p"Press any key to start recording, you will have 3 seconds to record" -n1
 	echo ""
 	echo "[Recording ...]"
-	ffmpeg -f alsa -i hw:0 -t 3 audioOnly.wav &> /dev/null;
+	ffmpeg -nostats -loglevel panic -f pulse -i default -t 3 audioOnly.wav &> /dev/null;
 	echo "Finished recording"
 	echo ""
 	read -p"Would you like to listen to the recording? [y/n]" -n1 listenToRecording
